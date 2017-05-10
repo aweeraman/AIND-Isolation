@@ -5,21 +5,26 @@ cases used by the project assistant are not public.
 
 import unittest
 
-import isolation
-import game_agent
+from isolation import *
+from game_agent import MinimaxPlayer
 
 from importlib import reload
-
 
 class IsolationTest(unittest.TestCase):
     """Unit tests for isolation agents"""
 
     def setUp(self):
-        reload(game_agent)
-        self.player1 = "Player1"
-        self.player2 = "Player2"
-        self.game = isolation.Board(self.player1, self.player2)
+        pass
 
+    def test_minimax(self):
+        self.player1 = MinimaxPlayer()
+        self.player2 = MinimaxPlayer()
+        self.game = Board(self.player1, self.player2)
+        self.game.apply_move((2, 3))
+        self.game.apply_move((0, 5))
+        winner, history, outcome = self.game.play()
+        self.assertTrue(type(history) == list)
+        self.assertTrue(len(history) > 1)
 
 if __name__ == '__main__':
     unittest.main()
