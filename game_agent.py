@@ -286,8 +286,20 @@ class AlphaBetaPlayer(IsolationPlayer):
         """
         self.time_left = time_left
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        # Initialize the best move so that this function returns something
+        # in case the search fails due to timeout
+        best_move = (-1, -1)
+
+        try:
+            # The try/except block will automatically catch the exception
+            # raised when the timer is about to expire.
+            return self.alphabeta_helper(game, self.search_depth)
+
+        except SearchTimeout:
+            pass  # Handle any actions required after timeout as needed
+
+        # Return the best move from the last completed search iteration
+        return best_move
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
         """Implement depth-limited minimax search with alpha-beta pruning as
@@ -337,5 +349,43 @@ class AlphaBetaPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        return self.alphabeta_helper(game, depth, alpha, beta)
+
+    def alphabeta_helper(self, game, depth, alpha=float("-inf"), beta=float("inf"), max_player=True):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        possible_moves = game.get_legal_moves()
+
+        if not possible_moves:
+            return game.utility(self), (-1, -1)
+
+        if depth <= 0:
+            return self.score(game, self), (-1, -1)
+
+        best_move = None
+
+        if max_player:
+           max_score = NEGINF
+           for move in possible_moves:
+                forecast = game.forecast_move(move)
+                current_score, _ = self.alphabeta_helper(forecast, depth - 1, alpha, beta, False)
+                alpha = max(alpha, current_score)
+                if current_score > max_score:
+                    max_score = current_score
+                    best_move = move
+                if alpha >= beta:
+                    break
+        else:
+            min_score = POSINF
+            for move in possible_moves:
+                forecast = game.forecast_move(move)
+                current_score, _ = self.alphabeta_helper(forecast, depth - 1, alpha, beta, True)
+                beta = min(beta, current_score)
+                if current_score < min_score:
+                    min_score = current_score
+                    best_move = move
+                if alpha >= beta:
+                    break
+
+        return best_move
