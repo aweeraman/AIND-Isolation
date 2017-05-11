@@ -12,6 +12,16 @@ class SearchTimeout(Exception):
     pass
 
 
+def get_next_legal_moves(game, player, current_location):
+    "Returns the list of legal moves for the provided location"
+    r, c = current_location
+    directions = [(-2, -1), (-2, 1), (-1, -2), (-1, 2), 
+                  (1, -2), (1, 2), (2, -1), (2, 1)]
+    valid_moves = [(r + dr, c + dc) for dr, dc in directions 
+                   if game.move_is_legal((r + dr, c + dc))]
+    return valid_moves
+
+
 def custom_score(game, player):
     """Calculate the heuristic value of a game state from the point of view
     of the given player.
@@ -36,7 +46,25 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    return 1.
+    if game.is_winner(player):
+        return POSINF
+    elif game.is_loser(player):
+        return NEGINF
+
+    points = 0.
+
+    board_center = (int(game.width / 2), int(game.height / 2))
+
+    location = game.get_player_location(player)
+
+    if location == board_center:
+        points += 5
+
+        valid_moves = get_next_legal_moves(game, player, location)
+
+        points += 0.5 * len(valid_moves)
+
+    return points 
 
 
 def custom_score_2(game, player):
@@ -61,8 +89,24 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_winner(player):
+        return POSINF
+    elif game.is_loser(player):
+        return NEGINF
+
+    points = 0.
+
+    board_center = (int(game.width / 2), int(game.height / 2))
+
+    location = game.get_player_location(player)
+    opponent = game.get_player_location(game.get_opponent(player))
+
+    valid_moves_player = get_next_legal_moves(game, player, location)
+    valid_moves_opponent = get_next_legal_moves(game, player, opponent)
+
+    points += len(valid_moves_player) - len(valid_moves_opponent)
+
+    return points 
 
 
 def custom_score_3(game, player):
