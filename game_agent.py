@@ -213,7 +213,9 @@ class MinimaxPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        return self.minimax_helper(game, depth)
+        _ , move = self.minimax_helper(game, depth)
+
+        return move
 
     def minimax_helper(self, game, depth, max_player=True):
         if self.time_left() < self.TIMER_THRESHOLD:
@@ -222,30 +224,32 @@ class MinimaxPlayer(IsolationPlayer):
         possible_moves = game.get_legal_moves()
 
         if not possible_moves:
-            return game.utility(self), (-1, -1)
+            return game.utility(self), None
 
         if depth <= 0:
-            return self.score(game, self), (-1, -1)
+            return self.score(game, self), None
 
         best_move = None
+        best_score = None
 
         if max_player:
-           max_score = NEGINF
+           best_score = NEGINF
            for move in possible_moves:
                 forecast = game.forecast_move(move)
                 current_score, _ = self.minimax_helper(forecast, depth - 1, False)
-                if current_score > max_score:
-                    max_score = current_score
+                if current_score > best_score:
+                    best_score = current_score
                     best_move = move
         else:
-            min_score = POSINF
+            best_score = POSINF
             for move in possible_moves:
                 forecast = game.forecast_move(move)
                 current_score, _ = self.minimax_helper(forecast, depth - 1, True)
-                if current_score < min_score:
-                    min_score = current_score
+                if current_score < best_score:
+                    best_score = current_score
                     best_move = move
-        return best_move
+
+        return best_score, best_move
 
 
 class AlphaBetaPlayer(IsolationPlayer):
@@ -293,7 +297,7 @@ class AlphaBetaPlayer(IsolationPlayer):
         try:
             # The try/except block will automatically catch the exception
             # raised when the timer is about to expire.
-            return self.alphabeta_helper(game, self.search_depth)
+            self.alphabeta_helper(game, self.search_depth)
 
         except SearchTimeout:
             pass  # Handle any actions required after timeout as needed
@@ -349,7 +353,12 @@ class AlphaBetaPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        return self.alphabeta_helper(game, depth, alpha, beta)
+        move = self.alphabeta_helper(game, depth, alpha, beta)
+
+        if move not in game.get_legal_moves():
+            return (-1, -1)
+
+        return move
 
     def alphabeta_helper(self, game, depth, alpha=float("-inf"), beta=float("inf"), max_player=True):
         if self.time_left() < self.TIMER_THRESHOLD:
