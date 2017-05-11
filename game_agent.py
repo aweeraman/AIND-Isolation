@@ -131,8 +131,52 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_winner(player):
+        return POSINF
+    elif game.is_loser(player):
+        return NEGINF
+
+    points = 0.
+
+    top = [(0, i) for i in range(game.width)]
+    right = [(i, game.width - 1) for i in range(game.height)]
+    bottom = [(game.height - 1, i) for i in range(game.width)]
+    left = [(i, 0) for i in range(game.height)]
+    corners = set(top + right + bottom + left)
+
+    location = game.get_player_location(player)
+    opponent = game.get_player_location(game.get_opponent(player))
+
+    valid_moves_player = get_next_legal_moves(game, player, location)
+    valid_moves_opponent = get_next_legal_moves(game, player, opponent)
+
+    player_corner_moves = 0.
+    opponent_corner_moves = 0.
+
+    if location in corners:
+        player_corner_moves += 1
+
+    if opponent in corners:
+        opponent_corner_moves += 1
+
+    for move in valid_moves_player:
+        if move in corners:
+            player_corner_moves += 1
+
+    for move in valid_moves_opponent:
+        if move in corners:
+            opponent_corner_moves += 1
+
+    player_corner_ratio = 0.
+    opponent_corner_ratio = 0.
+
+    if len(valid_moves_player) != 0:
+        player_corner_ratio = player_corner_moves / float(len(valid_moves_player))
+
+    if len(valid_moves_opponent) != 0:
+        opponent_corner_ratio = opponent_corner_moves / float(len(valid_moves_opponent))
+
+    return player_corner_ratio - opponent_corner_ratio
 
 
 class IsolationPlayer:
