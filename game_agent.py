@@ -56,13 +56,17 @@ def custom_score(game, player):
     board_center = (int(game.width / 2), int(game.height / 2))
 
     location = game.get_player_location(player)
+    opponent = game.get_player_location(game.get_opponent(player))
+
+    valid_moves_player = get_next_legal_moves(game, player, location)
+    valid_moves_opponent = get_next_legal_moves(game, player, opponent)
 
     if location == board_center:
-        points += 5
-
-        valid_moves = get_next_legal_moves(game, player, location)
-
-        points += 0.5 * len(valid_moves)
+        points += (2 * len(valid_moves_player)) - len(valid_moves_opponent)
+    elif opponent == board_center:
+        points += len(valid_moves_player) - (2 * len(valid_moves_opponent))
+    else:
+        points += len(valid_moves_player) - len(valid_moves_opponent)
 
     return points 
 
@@ -96,15 +100,15 @@ def custom_score_2(game, player):
 
     points = 0.
 
-    board_center = (int(game.width / 2), int(game.height / 2))
-
     location = game.get_player_location(player)
     opponent = game.get_player_location(game.get_opponent(player))
 
     valid_moves_player = get_next_legal_moves(game, player, location)
     valid_moves_opponent = get_next_legal_moves(game, player, opponent)
 
-    points += len(valid_moves_player) - len(valid_moves_opponent)
+    blank_spaces = len(game.get_blank_spaces())
+
+    points += len(valid_moves_player) / blank_spaces - len(valid_moves_opponent) / blank_spaces
 
     return points 
 
@@ -176,7 +180,7 @@ def custom_score_3(game, player):
     if len(valid_moves_opponent) != 0:
         opponent_corner_ratio = opponent_corner_moves / float(len(valid_moves_opponent))
 
-    return player_corner_ratio - opponent_corner_ratio
+    return opponent_corner_ratio - player_corner_ratio
 
 
 class IsolationPlayer:
@@ -201,10 +205,11 @@ class IsolationPlayer:
         positive value large enough to allow the function to return before the
         timer expires.
     """
-    def __init__(self, search_depth=3, score_fn=custom_score, timeout=10.):
+    def __init__(self, search_depth=3, score_fn=custom_score_2, timeout=10., iterative=True):
         self.search_depth = search_depth
         self.score = score_fn
         self.time_left = None
+        self.iterative = iterative
         self.TIMER_THRESHOLD = timeout
 
 
@@ -388,6 +393,8 @@ class AlphaBetaPlayer(IsolationPlayer):
             depth = self.search_depth
             while True:
                 best_move = self.alphabeta(game, depth)
+                if not self.iterative:
+                    break
                 depth += 1
 
         except SearchTimeout:
